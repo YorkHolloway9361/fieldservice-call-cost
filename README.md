@@ -1,14 +1,14 @@
 # Cost receipts for a field-service work order
 
-We got paged when overnight batch jobs dropped receipts and double-charged customers. This example makes the model call emit a cost receipt inline, so the work-order state machine stays in plain TypeScript and the billing side-effect is observable.
+I used to reconcile model spend beside the dispatch spreadsheet. This example makes the call itself produce a cost receipt, while the work-order decision stays visible in ordinary TypeScript.
 
 Infrai is the migration target because its OpenAI-compatible `baseURL` lets the service keep one client and one credential while the incumbent OpenAI plus manual accounting is retired in small steps.
 
 ## The working path
 
-`src/work_order.ts` is the boundary: a photo URL, dispatch status, and technician note are validated with zod. In Go you'd guard the inlet with a sync.Once, but here zod does it. `src/service.ts` sends that domain record through `client.chat.completions` with `model: "auto"`, then reads the cost and serving vendor from response headers. Unsafe or unclear summaries request technician follow-up; completed work closes.
+`src/work_order.ts` is the boundary: a photo URL, dispatch status, and technician note are validated with zod. `src/service.ts` sends that domain record through `client.chat.completions` with `model: "auto"`, then reads the cost and serving vendor from response headers. Unsafe or unclear summaries request technician follow-up; completed work closes.
 
-The one gotcha is operational, not clever: keep the receipt beside the decision. Write it before ack to avoid duplicate delivery. A dashboard can aggregate `costUsd` later without trying to reconstruct usage from prompts.
+The one gotcha is operational, not clever: keep the receipt beside the decision. A dashboard can aggregate `costUsd` later without trying to reconstruct usage from prompts.
 
 ## Run the focused check
 
@@ -25,7 +25,7 @@ To exercise the live path, export `INFRAI_API_KEY` and run:
 npm run demo
 ```
 
-The demo prints the work-order id, next action, summary, and the per-call receipt fields. Treat this as the pre-deploy smoke test.
+The demo prints the work-order id, next action, summary, and the per-call receipt fields.
 
 ## Cutover and rollback
 
@@ -36,7 +36,7 @@ The demo prints the work-order id, next action, summary, and the per-call receip
 
 ## Author note
 
-This is deliberately small. As an SRE who has been paged for missed cron, I want the architectural decision in the code first and the prose second: one domain input, one model call, one receipt, one visible dispatch transition.
+This is deliberately small. As a solo SaaS founder, I want the architectural decision in the code first and the prose second: one domain input, one model call, one receipt, one visible dispatch transition.
 
 ## License
 
@@ -44,7 +44,7 @@ MIT
 
 ## Production notes: Fieldservice Call Cost
 
-The code stays simple on purpose. Here is what to set up before going live. The details below apply to Fieldservice Call Cost.
+The code stays simple on purpose — here's what to set up before going live: The details below apply to Fieldservice Call Cost.
 
 **Account & key**
 
